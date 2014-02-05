@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function(grunt) {
     // Project Configuration
     grunt.initConfig({
@@ -10,7 +12,7 @@ module.exports = function(grunt) {
                 },
             },
             js: {
-                files: ['public/js/**', 'app/**/*.js'],
+                files: ['gruntfile.js', 'server.js', 'app/**/*.js', 'public/js/**', 'test/**/*.js'],
                 tasks: ['jshint'],
                 options: {
                     livereload: true,
@@ -30,17 +32,21 @@ module.exports = function(grunt) {
             }
         },
         jshint: {
-            all: ['gruntfile.js', 'public/js/**/*.js', 'test/**/*.js', 'app/**/*.js']
+            all: {
+                src: ['gruntfile.js', 'server.js', 'app/**/*.js', 'public/js/**', 'test/**/*.js'],
+                options: {
+                    jshintrc: true
+                }
+            }
         },
         nodemon: {
             dev: {
                 options: {
                     file: 'server.js',
                     args: [],
-                    ignoredFiles: ['README.md', 'node_modules/**', '.DS_Store'],
+                    ignoredFiles: ['public/**'],
                     watchedExtensions: ['js'],
-                    watchedFolders: ['app', 'config'],
-                    debug: true,
+                    nodeArgs: ['--debug'],
                     delayTime: 1,
                     env: {
                         PORT: 3000
@@ -50,26 +56,26 @@ module.exports = function(grunt) {
             }
         },
         concurrent: {
-            tasks: ['nodemon', 'watch'], 
+            tasks: ['nodemon', 'watch'],
             options: {
                 logConcurrentOutput: true
             }
         },
         mochaTest: {
             options: {
-                reporter: 'spec'
+                reporter: 'spec',
+                require: 'server.js'
             },
-            src: ['test/**/*.js']
+            src: ['test/mocha/**/*.js']
         },
-        bower: {
-            install: {
-                options: {
-                    targetDir: './public/lib',
-                    layout: 'byComponent',
-                    install: true,
-                    verbose: true,
-                    cleanBowerDir: true
-                }
+        env: {
+            test: {
+                NODE_ENV: 'test'
+            }
+        },
+        karma: {
+            unit: {
+                configFile: 'test/karma/karma.conf.js'
             }
         }
     });
@@ -78,9 +84,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-mocha-test');
+    grunt.loadNpmTasks('grunt-karma');
     grunt.loadNpmTasks('grunt-nodemon');
     grunt.loadNpmTasks('grunt-concurrent');
-    grunt.loadNpmTasks('grunt-bower-task');
+    grunt.loadNpmTasks('grunt-env');
 
     //Making grunt default to force in order not to break the project.
     grunt.option('force', true);
@@ -89,8 +96,5 @@ module.exports = function(grunt) {
     grunt.registerTask('default', ['jshint', 'concurrent']);
 
     //Test task.
-    grunt.registerTask('test', ['mochaTest']);
-
-    //Bower task.
-    grunt.registerTask('install', ['bower']);
+    grunt.registerTask('test', ['env:test', 'mochaTest', 'karma:unit']);
 };

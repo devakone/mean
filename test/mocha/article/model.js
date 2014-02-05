@@ -1,8 +1,9 @@
+'use strict';
+
 /**
  * Module dependencies.
  */
 var should = require('should'),
-    app = require('../../server'),
     mongoose = require('mongoose'),
     User = mongoose.model('User'),
     Article = mongoose.model('Article');
@@ -22,7 +23,7 @@ describe('<Unit Test>', function() {
                 password: 'password'
             });
 
-            user.save(function(err) {                
+            user.save(function() {
                 article = new Article({
                     title: 'Article Title',
                     content: 'Article Content',
@@ -34,14 +35,14 @@ describe('<Unit Test>', function() {
         });
 
         describe('Method Save', function() {
-            it('should be able to save whithout problems', function(done) {
+            it('should be able to save without problems', function(done) {
                 return article.save(function(err) {
                     should.not.exist(err);
                     done();
                 });
             });
 
-            it('should be able to show an error when try to save witout title', function(done) {
+            it('should be able to show an error when try to save without title', function(done) {
                 article.title = '';
 
                 return article.save(function(err) {
@@ -52,6 +53,13 @@ describe('<Unit Test>', function() {
         });
 
         afterEach(function(done) {
+            Article.remove({});
+            User.remove({});
+            done();
+        });
+        after(function(done) {
+            Article.remove().exec();
+            User.remove().exec();
             done();
         });
     });
