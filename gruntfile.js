@@ -4,28 +4,24 @@ module.exports = function(grunt) {
     // Project Configuration
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        assets: grunt.file.readJSON('server/config/assets.json'),
         watch: {
-            jade: {
-                files: ['app/views/**'],
-                options: {
-                    livereload: true,
-                },
-            },
             js: {
-                files: ['gruntfile.js', 'server.js', 'app/**/*.js', 'public/js/**', 'test/**/*.js'],
+                files: ['gruntfile.js', 'server.js', 'server/**/*.js', 'public/js/**', 'test/**/*.js'],
                 tasks: ['jshint'],
                 options: {
-                    livereload: true,
-                },
+                    livereload: true
+                }
             },
             html: {
-                files: ['public/views/**'],
+                files: ['public/views/**', 'server/views/**'],
                 options: {
-                    livereload: true,
-                },
+                    livereload: true
+                }
             },
             css: {
                 files: ['public/css/**'],
+                tasks: ['csslint'],
                 options: {
                     livereload: true
                 }
@@ -33,23 +29,44 @@ module.exports = function(grunt) {
         },
         jshint: {
             all: {
-                src: ['gruntfile.js', 'server.js', 'app/**/*.js', 'public/js/**', 'test/**/*.js'],
+                src: ['gruntfile.js', 'server.js', 'server/**/*.js', 'public/js/**', 'test/**/*.js', '!test/coverage/**/*.js'],
                 options: {
                     jshintrc: true
                 }
             }
         },
+        uglify: {
+            options: {
+                mangle: false
+            },
+            production: {
+                files: '<%= assets.js %>'
+            }
+        },
+        csslint: {
+            options: {
+                csslintrc: '.csslintrc'
+            },
+            all: {
+                src: ['public/css/**/*.css']
+            }
+        },
+        cssmin: {
+            combine: {
+                files: '<%= assets.css %>'
+            }
+        },
         nodemon: {
             dev: {
+                script: 'server.js',
                 options: {
-                    file: 'server.js',
                     args: [],
-                    ignoredFiles: ['public/**'],
-                    watchedExtensions: ['js'],
+                    ignore: ['public/**'],
+                    ext: 'js,html',
                     nodeArgs: ['--debug'],
                     delayTime: 1,
                     env: {
-                        PORT: 3000
+                        PORT: require('./server/config/config').port
                     },
                     cwd: __dirname
                 }
@@ -80,7 +97,10 @@ module.exports = function(grunt) {
         }
     });
 
-    //Load NPM tasks 
+    //Load NPM tasks
+    grunt.loadNpmTasks('grunt-contrib-cssmin');
+    grunt.loadNpmTasks('grunt-contrib-csslint');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-mocha-test');
@@ -93,7 +113,11 @@ module.exports = function(grunt) {
     grunt.option('force', true);
 
     //Default task(s).
-    grunt.registerTask('default', ['jshint', 'concurrent']);
+    if (process.env.NODE_ENV === 'production') {
+        grunt.registerTask('default', ['jshint', 'csslint', 'cssmin', 'uglify', 'concurrent']);
+    } else {
+        grunt.registerTask('default', ['jshint', 'csslint', 'concurrent']);
+    }
 
     //Test task.
     grunt.registerTask('test', ['env:test', 'mochaTest', 'karma:unit']);
