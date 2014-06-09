@@ -1,7 +1,7 @@
 'use strict';
 
 var paths = {
-    js: ['*.js', 'server/**/*.js', 'public/**/*.js', 'test/**/*.js', '!test/coverage/**', '!public/system/lib/**', 'packages/**/*.js'],
+    js: ['*.js', 'server/**/*.js', 'public/**/*.js', 'test/**/*.js', '!test/coverage/**', '!public/system/lib/**', 'packages/**/*.js', '!packages/**/node_modules/**'],
     html: ['public/**/views/**', 'server/views/**', 'packages/**/public/**/views/**', 'packages/**/server/views/**'],
     css: ['public/**/css/*.css', '!public/system/lib/**', 'packages/**/public/**/css/*.css']
 };
@@ -48,11 +48,11 @@ module.exports = function(grunt) {
             }
         },
         uglify: {
-            options: {
-                mangle: false
-            },
-            production: {
-                files: '<%= assets.js %>'
+            core: {
+                options: {
+                    mangle: false
+                },
+                files: '<%= assets.core.js %>'
             }
         },
         csslint: {
@@ -62,8 +62,8 @@ module.exports = function(grunt) {
             src: paths.css
         },
         cssmin: {
-            combine: {
-                files: '<%= assets.css %>'
+            core: {
+                files: '<%= assets.core.css %>'
             }
         },
         nodemon: {

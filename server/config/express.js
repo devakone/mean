@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 var express = require('express'),
-    favicon = require('static-favicon'),
+    favicon = require('serve-favicon'),
     morgan = require('morgan'),
     compression = require('compression'),
     bodyParser = require('body-parser'),
@@ -20,14 +20,14 @@ var express = require('express'),
     config = require('./config'),
     expressValidator = require('express-validator'),
     appPath = process.cwd(),
-    util = require('./util'),
+    util = require('meanio/lib/util'),
     assetmanager = require('assetmanager'),
     fs = require('fs'),
     Grid = require('gridfs-stream');
 
 module.exports = function(app, passport, db) {
 
-    var gfs = new Grid(db.connections[0].db, db.mongo);
+    var gfs = new Grid(db.connection.db, db.mongo);
 
     app.set('showStackError', true);
 
@@ -69,20 +69,17 @@ module.exports = function(app, passport, db) {
     app.use(expressValidator());
     app.use(bodyParser());
     app.use(methodOverride());
-    app.use(cookieParser());
 
-    // Import your asset file
-    var assets = require('./assets.json');
-    assetmanager.init({
-        js: assets.js,
-        css: assets.css,
+    // Import the assets file
+    var assets = assetmanager.process({
+        assets: require('./assets.json'),
         debug: (process.env.NODE_ENV !== 'production'),
         webroot: 'public/public'
     });
 
     // Add assets to local variables
     app.use(function(req, res, next) {
-        res.locals.assets = assetmanager.assets;
+        res.locals.assets = assets;
         next();
     });
 
@@ -109,7 +106,7 @@ module.exports = function(app, passport, db) {
     app.use(flash());
 
     // Setting the fav icon and static folder
-    app.use(favicon());
+    app.use(favicon(appPath + '/public/system/assets/img/favicon.ico'));
 
     app.get('/modules/aggregated.js', function(req, res) {
         res.setHeader('content-type', 'text/javascript');
@@ -125,7 +122,7 @@ module.exports = function(app, passport, db) {
         }, function(err, file) {
 
             if (!file) {
-                fs.createReadStream(process.cwd() + '/public/system/lib/bootstrap/dist/css/bootstrap.css').pipe(res);
+                fs.createReadStream(appPath + '/public/system/lib/bootstrap/dist/css/bootstrap.css').pipe(res);
             } else {
                 // streaming to gridfs
                 var readstream = gfs.createReadStream({
@@ -164,7 +161,7 @@ module.exports = function(app, passport, db) {
             // Skip the app/routes/middlewares directory as it is meant to be
             // used and shared by routes as further middlewares and is not a
             // route by itself
-            util.walk(appPath + '/server/routes', 'middlewares', function(path) {
+            util.walk(appPath + '/server', 'route', 'middlewares', function(path) {
                 require(path)(app, passport);
             });
         }
