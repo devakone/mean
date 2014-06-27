@@ -3,7 +3,7 @@
 //Setting up route
 angular.module('mean.auth').config(['$stateProvider',
     function($stateProvider) {
-        // Check if the user is not conntected
+        // Check if the user is not connected
         var checkLoggedOut = function($q, $timeout, $http, $location) {
             // Initialize a new promise
             var deferred = $q.defer();
@@ -27,14 +27,14 @@ angular.module('mean.auth').config(['$stateProvider',
         $stateProvider
             .state('auth.login', {
                 url: '/login',
-                templateUrl: 'public/auth/views/login.html',
+                templateUrl: '/auth/views/login.html',
                 resolve: {
                     loggedin: checkLoggedOut
                 }
             })
             .state('auth.register', {
                 url: '/register',
-                templateUrl: 'public/auth/views/register.html',
+                templateUrl: '/auth/views/register.html',
                 resolve: {
                     loggedin: checkLoggedOut
                 }
